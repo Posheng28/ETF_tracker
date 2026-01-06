@@ -1,40 +1,43 @@
 @echo off
-:: ==========================================
-:: ETF Tracker - One Click Setup
-:: ==========================================
+chcp 65001 >nul
+setlocal
 
-echo [INFO] Checking Administrator Privileges...
+echo ==========================================
+echo ETF Trace 系統一鍵安裝腳本 (Auto Setup)
+echo ==========================================
+
+:: 檢查管理員權限
 net session >nul 2>&1
 if %errorLevel% == 0 (
-    echo [OK] Running as Administrator.
+    echo [INFO] 檢測到管理員權限 (Administrator Mode: ON)
 ) else (
-    echo [WARNING] Not running as Administrator.
-    echo Please right-click and select "Run as Administrator" if installation fails.
+    echo [WARNING] 建議右鍵選擇「以系統管理員身分執行」此腳本，
+    echo 以確保自動安裝功能正常運作。
     echo.
 )
 
 echo.
-echo [1/3] Checking System Environment...
+echo [1/3] 檢查與安裝系統環境 (Checking System)...
 
 :: Check Python
 where python >nul 2>nul
 if %errorlevel% neq 0 goto InstallPython
-echo [OK] Python is installed.
+echo Python: 已安裝 (OK)
 goto CheckNode
 
 :InstallPython
-echo [!] Python not found. Attempting auto-install via Winget...
+echo [!] 找不到 Python，正在嘗試自動安裝...
+echo 正在呼叫 Windows Package Manager (winget)...
 winget install -e --id Python.Python.3.12 --scope machine --accept-package-agreements --accept-source-agreements
 if %errorlevel% neq 0 goto PythonFail
-echo [OK] Python installed successfully.
-echo Please close this window and run setup.bat again to refresh environment variables.
+echo Python 安裝完成！請關閉此視窗並重新執行 setup.bat 以讀取新的環境變數。
 pause
 exit
 
 :PythonFail
 echo.
-echo [ERROR] Failed to install Python automatically.
-echo Please download it manually: https://www.python.org/downloads/
+echo [ERROR] 自動安裝 Python 失敗。
+echo 請手動下載: https://www.python.org/downloads/
 pause
 exit /b
 
@@ -42,28 +45,28 @@ exit /b
 :: Check Node.js
 where npm >nul 2>nul
 if %errorlevel% neq 0 goto InstallNode
-echo [OK] Node.js is installed.
+echo Node.js: 已安裝 (OK)
 goto InstallBackend
 
 :InstallNode
-echo [!] Node.js not found. Attempting auto-install via Winget...
+echo [!] 找不到 Node.js，正在嘗試自動安裝...
+echo 正在呼叫 Windows Package Manager (winget)...
 winget install -e --id OpenJS.NodeJS.LTS --scope machine --accept-package-agreements --accept-source-agreements
 if %errorlevel% neq 0 goto NodeFail
-echo [OK] Node.js installed successfully.
-echo Please close this window and run setup.bat again to refresh environment variables.
+echo Node.js 安裝完成！請關閉此視窗並重新執行 setup.bat 以讀取新的環境變數。
 pause
 exit
 
 :NodeFail
 echo.
-echo [ERROR] Failed to install Node.js automatically.
-echo Please download it manually: https://nodejs.org/
+echo [ERROR] 自動安裝 Node.js 失敗。
+echo 請手動下載: https://nodejs.org/
 pause
 exit /b
 
 :InstallBackend
 echo.
-echo [2/3] Installing Backend Dependencies...
+echo [2/3] 安裝後端依賴 (Installing Backend)...
 cd backend
 pip install -r requirements.txt
 if %errorlevel% neq 0 goto BackendFail
@@ -71,14 +74,13 @@ cd ..
 goto InstallFrontend
 
 :BackendFail
-echo [ERROR] Failed to install backend packages.
-echo Try upgrading pip: python -m pip install --upgrade pip
+echo [ERROR] 後端套件安裝失敗。建議升級 pip (python -m pip install --upgrade pip) 後重試。
 pause
 exit /b
 
 :InstallFrontend
 echo.
-echo [3/3] Installing Frontend Dependencies...
+echo [3/3] 安裝前端依賴 (Installing Frontend)...
 cd frontend
 call npm install
 if %errorlevel% neq 0 goto FrontendFail
@@ -86,14 +88,14 @@ cd ..
 goto Finish
 
 :FrontendFail
-echo [ERROR] Failed to install frontend packages.
+echo [ERROR] 前端套件安裝失敗。
 pause
 exit /b
 
 :Finish
 echo.
 echo ==========================================
-echo [SUCCESS] Setup Complete!
+echo ★ 安裝全部完成！(Setup Complete)
 echo ==========================================
-echo You can now run 'run.bat' to start the system.
+echo 請執行 run.bat 啟動系統。
 pause
