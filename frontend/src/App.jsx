@@ -122,7 +122,7 @@ function App() {
     <div className="max-w-6xl mx-auto p-8">
       <header className="mb-12 flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-bold mb-2 gradient-text">ETF 持倉異動追蹤 (9PM更新)</h1>
+          <h1 className="text-4xl font-bold mb-2 gradient-text">ETF 持倉異動追蹤 (7PM更新)</h1>
           <p className="text-gray-400 flex items-center gap-2">
             <Calendar size={16} /> 比較日期: {data.dates?.new ? `${data.dates.new.slice(0, 4)}/${data.dates.new.slice(4, 6)}/${data.dates.new.slice(6, 8)}` : 'N/A'} vs {data.dates?.old ? `${data.dates.old.slice(0, 4)}/${data.dates.old.slice(4, 6)}/${data.dates.old.slice(6, 8)}` : 'N/A'}
           </p>
