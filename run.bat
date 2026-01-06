@@ -1,25 +1,31 @@
 @echo off
-chcp 65001 >nul
-echo ===================================================
-echo       正在啟動 ETF 追蹤系統 (Starting System)
-echo ===================================================
+:: ==========================================
+:: ETF Tracker - Launcher
+:: ==========================================
 
-echo 1. 啟動後端伺服器 (Starting Backend)...
+echo [INFO] Starting System...
+
+echo.
+echo 1. Starting Backend Server...
 start "ETF Backend Server" cmd /k "python start.py"
 
-echo 2. 啟動前端介面 (Starting Frontend)...
+echo.
+echo 2. Starting Frontend Interface...
 cd frontend
 start "ETF Frontend" cmd /k "npm run dev"
 cd ..
 
-echo 3. 等待系統就緒 (Waiting)...
+echo.
+echo 3. Waiting for services to initialize...
 timeout /t 5 >nul
 
-echo 4. 開啟瀏覽器 (Opening Browser)...
+echo.
+echo 4. Opening Browser...
 start http://localhost:5173
 
-echo ===================================================
-echo 系統已啟動！請勿關閉跳出的兩個黑色視窗。
-echo System Started! Please keep the new windows open.
-echo ===================================================
+echo.
+echo ==========================================
+echo [SUCCESS] System Started!
+echo Please keep the two black windows open.
+echo ==========================================
 pause
