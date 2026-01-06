@@ -17,6 +17,19 @@ const formatNumber = (val) => {
   return new Intl.NumberFormat('zh-TW').format(val);
 };
 
+const formatLargeNumber = (val) => {
+  if (val === undefined || val === null || isNaN(val)) return "—";
+  const absn = Math.abs(val);
+  const sign = val < 0 ? "-" : "";
+  if (absn >= 100_000_000) {
+    return `${sign}${(absn / 100_000_000).toFixed(1)}億`;
+  } else if (absn >= 10_000) {
+    return `${sign}${Math.round(absn / 10_000)}萬`;
+  } else {
+    return `${sign}${Math.round(absn)}`;
+  }
+};
+
 function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,17 +65,39 @@ function App() {
 
     let items = [];
     if (activeTab === 'aggregated') {
-      // FIX: Aggregated view must be calculated on frontend because backend delivers etf_details
       if (type === 'changes') {
+        const merged = {};
         Object.entries(data.etf_details).forEach(([etfCode, details]) => {
           if (details.changes) {
             details.changes.forEach(change => {
-              // We clone the item and add the source ETF to 'affected_etfs' so the UI doesn't crash
-              // Note: This simple implementation lists duplicates separately.
-              items.push({ ...change, affected_etfs: [etfCode] });
+              const ticker = change.ticker;
+              if (!merged[ticker]) {
+                merged[ticker] = {
+                  ...change,
+                  affected_etfs: [etfCode],
+                  // Ensure numeric types for accumulation
+                  delta_shares: Number(change.delta_shares),
+                  monetary_value: Number(change.monetary_value),
+                  old_shares: Number(change.old_shares),
+                  new_shares: Number(change.new_shares)
+                };
+              } else {
+                merged[ticker].affected_etfs.push(etfCode);
+                merged[ticker].delta_shares += Number(change.delta_shares);
+                merged[ticker].monetary_value += Number(change.monetary_value);
+                merged[ticker].old_shares += Number(change.old_shares);
+                merged[ticker].new_shares += Number(change.new_shares);
+              }
             });
           }
         });
+
+        items = Object.values(merged)
+          .filter(item => item.delta_shares !== 0) // Filter out items with no net change
+          .map(item => ({
+            ...item,
+            monetary_value_str: formatLargeNumber(item.monetary_value)
+          }));
       }
     } else {
       const etfData = data.etf_details[activeTab];

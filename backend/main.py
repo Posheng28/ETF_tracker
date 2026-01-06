@@ -14,6 +14,8 @@ from urllib.parse import unquote
 import gdown
 from bs4 import BeautifulSoup
 import yfinance as yf
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Fix Windows console encoding
 sys.stdout.reconfigure(encoding='utf-8')
@@ -42,6 +44,18 @@ class ETFProcessor:
         }
         self.price_cache = {}
         os.makedirs(CACHE_DIR, exist_ok=True)
+        
+        # Configure robust session with retries
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
     # ---------------- Price Fetching ----------------
     def get_mis_prices(self, code, date_str):
@@ -52,9 +66,14 @@ class ETFProcessor:
         try:
             for prefix in ('tse_', 'otc_'):
                 url = f'https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch={prefix}{code}.tw&json=1&delay=0'
-                time.sleep(random.uniform(0.1, 0.3))
-                r = requests.get(url, timeout=5)
-                data = r.json()
+                time.sleep(random.uniform(0.5, 1.0))  # Increased delay to be nicer to the API
+                r = self.session.get(url, timeout=10)
+                try:
+                    data = r.json()
+                except ValueError:
+                     # If response is not JSON (e.g. empty or HTML error page), skip
+                    continue
+                
                 if 'msgArray' in data:
                     for item in data['msgArray']:
                         if item.get('c') != code:
@@ -76,7 +95,7 @@ class ETFProcessor:
             y, m = int(date_str[:4]), int(date_str[4:6])
             month_first = f"{y}{m:02d}01"
             url = f'https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date={month_first}&stockNo={code}'
-            r = requests.get(url, timeout=5)
+            r = self.session.get(url, timeout=10)
             data = r.json()
             if data.get('stat') == 'OK' and data.get('data'):
                 def to_roc_date(s):
@@ -182,7 +201,7 @@ class ETFProcessor:
     def _list_from_embedded(self, folder_id: str):
         url = f"https://drive.google.com/embeddedfolderview?id={folder_id}#list"
         try:
-            resp = requests.get(url, timeout=10)
+            resp = self.session.get(url, timeout=15)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, "html.parser")
             out = []
@@ -207,7 +226,7 @@ class ETFProcessor:
     def _list_from_drive_page(self, folder_id: str):
         url = f"https://drive.google.com/drive/folders/{folder_id}"
         try:
-            resp = requests.get(url, timeout=10)
+            resp = self.session.get(url, timeout=15)
             resp.raise_for_status()
             html = resp.text
             soup = BeautifulSoup(html, "html.parser")
