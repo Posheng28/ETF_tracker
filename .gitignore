@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data Cache
+etf_data_cache/
+
+# Frontend (if npm install run in root accidentally)
+node_modules/
+
+# Logs
+*.log
+debug_error.log
+debug_v2.txt
+inspection_result.txt
+verify_result.txt
+
+# OS
+.DS_Store
+Thumbs.db

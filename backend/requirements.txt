@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+openpyxl
+yfinance
+python-multipart
+# User requested libraries
+requests
+gdown
+beautifulsoup4
+lxml
